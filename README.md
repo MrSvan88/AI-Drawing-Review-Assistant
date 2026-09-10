@@ -69,6 +69,23 @@ Future versions could add drawing analysis, automatic comparison between revisio
 
 The long-term goal would be an AI assistant that helps engineers reuse engineering knowledge and spend more time on complex engineering decisions.
 
+## Prototype
+
+Development of a first experimental prototype has started.
+
+The prototype currently performs simple checks for common information in a technical drawing, such as:
+
+* Drawing number
+* Revision
+* Date
+* Drawing title
+
+A fictional engineering drawing is included in this repository as a safe test case.
+
+![Example engineering drawing](example_drawing.png)
+
+The goal is to gradually expand the prototype with more advanced drawing checks, comparison of drawing information and eventually AI-assisted review.
+
 ## Acknowledgments
 
 This project was created as a final project for the Building AI course.

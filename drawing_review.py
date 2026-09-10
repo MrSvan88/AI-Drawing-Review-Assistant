@@ -1,66 +1,151 @@
 """
 AI Drawing Review Assistant
-Prototype v0.1
+Prototype v0.2
 
-A simple first prototype for checking whether common drawing
-information is present in extracted drawing text.
+A simple prototype for demonstrating automated checks
+of information found in technical engineering drawings.
 
-This version does not yet read PDF files automatically.
-Instead, paste or load text from a technical drawing and run
-the checks below.
+The current version uses structured drawing data from the
+fictional example drawing included in this repository.
 """
 
-REQUIRED_FIELDS = {
-    "Drawing number": ["drawing no", "drawing number", "dwg no", "dwg"],
-    "Revision": ["revision", "rev"],
-    "Date": ["date"],
-    "Drawing title": ["title", "drawing title"],
-}
+# Expected information for the drawing
+REQUIRED_BASIC_FIELDS = [
+    "drawing_number",
+    "revision",
+    "date",
+    "title",
+]
+
+REQUIRED_ENGINEERING_FIELDS = [
+    "design_pressure",
+    "design_temperature",
+    "material",
+    "nozzle_schedule",
+]
 
 
-def check_drawing_text(text):
-    """Check whether expected drawing information appears in the text."""
-    text_lower = text.lower()
+def check_required_fields(drawing, required_fields):
+    """Check that required information exists and has a value."""
     results = {}
 
-    for field, keywords in REQUIRED_FIELDS.items():
-        results[field] = any(keyword in text_lower for keyword in keywords)
+    for field in required_fields:
+        results[field] = field in drawing and bool(drawing[field])
 
     return results
 
 
-def print_report(results):
-    """Print a simple drawing review report."""
-    print("\nAI Drawing Review Assistant")
-    print("-" * 30)
+def check_nozzles(drawing, expected_nozzles):
+    """Check that all expected nozzle IDs are present."""
+    actual_nozzles = drawing.get("nozzles", [])
 
-    missing = []
+    results = {}
 
-    for field, found in results.items():
-        symbol = "✓" if found else "✗"
-        status = "Found" if found else "Missing"
-        print(f"{field:<16}: {symbol} {status}")
+    for nozzle in expected_nozzles:
+        results[nozzle] = nozzle in actual_nozzles
 
-        if not found:
-            missing.append(field)
+    return results
 
-    print("\nReview result:")
 
-    if not missing:
-        print("✓ All basic drawing information was identified.")
+def print_section(title, results):
+    """Print one section of the review report."""
+    print(f"\n{title}")
+    print("-" * len(title))
+
+    issues = 0
+
+    for item, passed in results.items():
+        symbol = "✓" if passed else "✗"
+        status = "OK" if passed else "MISSING"
+
+        readable_name = item.replace("_", " ").title()
+
+        print(f"{symbol} {readable_name}: {status}")
+
+        if not passed:
+            issues += 1
+
+    return issues
+
+
+def review_drawing(drawing):
+    """Run all currently available drawing checks."""
+
+    print("\nAI DRAWING REVIEW ASSISTANT")
+    print("=" * 35)
+
+    print(f"Drawing:  {drawing.get('drawing_number', 'Unknown')}")
+    print(f"Revision: {drawing.get('revision', 'Unknown')}")
+
+    basic_results = check_required_fields(
+        drawing,
+        REQUIRED_BASIC_FIELDS
+    )
+
+    engineering_results = check_required_fields(
+        drawing,
+        REQUIRED_ENGINEERING_FIELDS
+    )
+
+    expected_nozzles = [
+        "N1", "N2", "N3", "N4",
+        "N5", "N6", "N7", "N8"
+    ]
+
+    nozzle_results = check_nozzles(
+        drawing,
+        expected_nozzles
+    )
+
+    issues = 0
+
+    issues += print_section(
+        "BASIC DRAWING CHECKS",
+        basic_results
+    )
+
+    issues += print_section(
+        "ENGINEERING CHECKS",
+        engineering_results
+    )
+
+    issues += print_section(
+        "NOZZLE CHECK",
+        nozzle_results
+    )
+
+    print("\nREVIEW RESULT")
+    print("-" * 13)
+
+    if issues == 0:
+        print("✓ No issues found by the automated checks.")
     else:
-        for field in missing:
-            print(f"⚠ {field} information could not be identified.")
+        print(f"⚠ {issues} potential issue(s) found.")
+
+    print("\nFinal review must be performed by a qualified engineer.")
+
+
+# ---------------------------------------------------------
+# Fictional test data based on example_drawing.png
+# ---------------------------------------------------------
+
+example_drawing = {
+    "drawing_number": "EX-1000-001",
+    "revision": "A",
+    "date": "2025-09-01",
+    "title": "Vertical Pressure Vessel - General Arrangement",
+
+    "design_pressure": "10 bar(g)",
+    "design_temperature": "150 °C",
+    "material": "S355",
+    "nozzle_schedule": True,
+
+    "nozzles": [
+        "N1", "N2", "N3", "N4",
+        "N5", "N6", "N7", "N8"
+    ],
+}
 
 
 if __name__ == "__main__":
-    # Example drawing text.
-    # Replace this later with text extracted from a real drawing.
-    drawing_text = """
-    DRAWING NUMBER: P-101
-    REV: A
-    TITLE: Process Piping Layout
-    """
-
-    results = check_drawing_text(drawing_text)
-    print_report(results)
+    review_drawing(example_drawing)
